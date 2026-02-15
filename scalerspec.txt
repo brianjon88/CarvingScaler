@@ -1,0 +1,128 @@
+Here’s a clear, structured spec you can hand to an AI like Claude Code to vibe-code your carving pattern scaling app in C#. It’s written to be immediately actionable, with modular components, UI expectations, and logic requirements — all grounded in the image you just generated.
+
+---
+
+## 🧩 Project Spec: Carving Pattern Toolkit (Blazor WebAssembly App)
+
+### **Overview**
+This is a C# Blazor WebAssembly app designed to help woodcarvers scale carving patterns between different block sizes, convert measurements between inches and millimeters, and translate decimal inches into standard fractions used on measuring tools. Future support includes scaling uploaded sketches.
+
+---
+
+## 🧱 Core Features
+
+### 1. **Pattern Scaling Tool**
+- Input: Original block dimensions (X, Y, Z in inches)
+- Input: New block dimensions (X, Y, Z in inches)
+- Output: Scale factors for each axis
+- Input: Cut line entries (name + original measurement in inches)
+- Output: Scaled measurement in inches and millimeters
+- Toggle: Display scaled inches as decimal or fraction (1/16", 1/32")
+
+### 2. **Measurement Tools**
+- Convert inches ↔ millimeters
+- Convert decimal inches ↔ fractional inches
+- Support precision toggles: 1/16", 1/32", 1/64"
+
+### 3. **Drawing Scaling (Future)**
+- Upload sketch image
+- Define reference line in pixels and real-world inches
+- Compute scale factor
+- Apply scale to image
+- Preview and download scaled image
+
+---
+
+## 🖼️ UI Layout (Based on Image)
+
+### Sidebar Navigation
+- Pattern Scaling (default active)
+- Measurement Tools
+- Drawing Scaling
+- Settings
+
+### Pattern Scaling Page
+- Two input panels:
+  - Original Block Dimensions (X, Y, Z)
+  - New Block Dimensions (X, Y, Z)
+- Compute Scale button
+- Scale Factors display (X, Y, Z)
+- Cut Lines table:
+  - Columns: Cut Name, Original (in), Scaled (in), Scaled (mm)
+  - Add Cut Line button
+- Fraction Display toggle: Decimal | 1/16" | 1/32"
+
+---
+
+## 🧩 Component Breakdown
+
+### Pages
+- `PatternScaling.razor`
+- `MeasurementTools.razor`
+- `DrawingScaling.razor`
+
+### Components
+- `BlockDimensionInput.razor`
+- `ScaleFactorDisplay.razor`
+- `CutLineTable.razor`
+- `FractionToggle.razor`
+- `UnitConverter.razor`
+- `ImageScaler.razor` (future)
+
+### Services
+- `ScalingService.cs`
+- `FractionService.cs`
+- `UnitConversionService.cs`
+- `ImageScalingService.cs` (future)
+
+---
+
+## 🧮 Logic Requirements
+
+### Scaling
+```csharp
+scaleX = newX / origX;
+scaleY = newY / origY;
+scaleZ = newZ / origZ;
+```
+
+### Cut Line Scaling
+```csharp
+scaledInches = originalInches * scaleX; // or scaleY/scaleZ depending on axis
+scaledMM = scaledInches * 25.4;
+```
+
+### Fraction Conversion
+```csharp
+public static string ToFraction(double value, int denominator = 16)
+{
+    int num = (int)Math.Round(value * denominator);
+    return $"{num}/{denominator}";
+}
+```
+
+### Unit Conversion
+```csharp
+mm = inches * 25.4;
+inches = mm / 25.4;
+```
+
+---
+
+## 🧪 Testing Notes
+- Validate scale factor computation with known ratios
+- Confirm fraction rounding matches ruler markings
+- Ensure cut line table updates dynamically
+- Test toggling between decimal and fractional views
+
+---
+
+## 🧭 Future Enhancements
+- Image upload and scaling
+- Preset block sizes
+- Export scaled cut lines to PDF or SVG
+- Save/load user presets
+
+---
+
+Let me know if you want this spec turned into a starter project scaffold with file structure and initial Blazor components.

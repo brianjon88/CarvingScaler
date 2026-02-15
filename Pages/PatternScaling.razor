@@ -1,0 +1,693 @@
+@page "/"
+@page "/pattern-scaling"
+@using CarvingScaler.Services
+@inject AppState AppState
+
+<PageTitle>Pattern Scaling - Carving Pattern Toolkit</PageTitle>
+
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h3>Pattern Scaling</h3>
+                    <p class="text-muted">Scale carving patterns between different block sizes</p>
+                </div>
+                <div class="d-flex gap-3 flex-wrap">
+                    <!-- Fraction Display Toggle -->
+                    <div class="btn-group" role="group">
+                        <span class="me-2 align-self-center"><strong>Display:</strong></span>
+                        <input type="radio" class="btn-check" name="fractionMode" id="decimal"
+                               checked="@(fractionDisplay == FractionMode.Decimal)"
+                               @onchange="() => fractionDisplay = FractionMode.Decimal" />
+                        <label class="btn btn-outline-secondary" for="decimal">Decimal</label>
+
+                        <input type="radio" class="btn-check" name="fractionMode" id="sixteenth"
+                               checked="@(fractionDisplay == FractionMode.Sixteenth)"
+                               @onchange="() => fractionDisplay = FractionMode.Sixteenth" />
+                        <label class="btn btn-outline-secondary" for="sixteenth">1/16"</label>
+
+                        <input type="radio" class="btn-check" name="fractionMode" id="thirtysecond"
+                               checked="@(fractionDisplay == FractionMode.ThirtySecond)"
+                               @onchange="() => fractionDisplay = FractionMode.ThirtySecond" />
+                        <label class="btn btn-outline-secondary" for="thirtysecond">1/32"</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-end gap-3 flex-wrap">
+                <!-- Unit Toggle - Changes based on mode -->
+                @if (AppState.UnitModePreference == UnitMode.GlobalUnits)
+                {
+                    <div class="btn-group" role="group">
+                        <span class="me-2 align-self-center"><strong>Units:</strong></span>
+                        <input type="radio" class="btn-check" name="measurementUnit" id="inches"
+                               checked="@(displayUnit == MeasurementUnit.Inches)"
+                               @onchange="@(() => ChangeDisplayUnit(MeasurementUnit.Inches))" />
+                        <label class="btn btn-outline-primary" for="inches">Inches</label>
+
+                        <input type="radio" class="btn-check" name="measurementUnit" id="millimeters"
+                               checked="@(displayUnit == MeasurementUnit.Millimeters)"
+                               @onchange="@(() => ChangeDisplayUnit(MeasurementUnit.Millimeters))" />
+                        <label class="btn btn-outline-primary" for="millimeters">MM</label>
+                    </div>
+                }
+                else
+                {
+                    <div class="btn-group" role="group">
+                        <span class="me-2 align-self-center"><strong>Original Units:</strong></span>
+                        <input type="radio" class="btn-check" name="originalUnit" id="originalInches"
+                               checked="@(originalBlockUnit == MeasurementUnit.Inches)"
+                               @onchange="@(() => ChangeOriginalBlockUnit(MeasurementUnit.Inches))" />
+                        <label class="btn btn-outline-info" for="originalInches">Inches</label>
+
+                        <input type="radio" class="btn-check" name="originalUnit" id="originalMM"
+                               checked="@(originalBlockUnit == MeasurementUnit.Millimeters)"
+                               @onchange="@(() => ChangeOriginalBlockUnit(MeasurementUnit.Millimeters))" />
+                        <label class="btn btn-outline-info" for="originalMM">MM</label>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <span class="me-2 align-self-center"><strong>New Units:</strong></span>
+                        <input type="radio" class="btn-check" name="newUnit" id="newInches"
+                               checked="@(newBlockUnit == MeasurementUnit.Inches)"
+                               @onchange="@(() => ChangeNewBlockUnit(MeasurementUnit.Inches))" />
+                        <label class="btn btn-outline-success" for="newInches">Inches</label>
+
+                        <input type="radio" class="btn-check" name="newUnit" id="newMM"
+                               checked="@(newBlockUnit == MeasurementUnit.Millimeters)"
+                               @onchange="@(() => ChangeNewBlockUnit(MeasurementUnit.Millimeters))" />
+                        <label class="btn btn-outline-success" for="newMM">MM</label>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Original Block Dimensions -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Original Block Dimensions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Width <span class="text-muted">(@(GetOriginalUnitLabel()))</span></label>
+                            <input type="number" class="form-control" @bind="displayOriginalX" step="0.01" />
+                            @if (GetOriginalUnitLabel() == "in" && fractionDisplay != FractionMode.Decimal)
+                            {
+                                <small class="text-muted d-block mt-1">@ConvertToFraction(displayOriginalX, fractionDisplay)</small>
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Height <span class="text-muted">(@(GetOriginalUnitLabel()))</span></label>
+                            <input type="number" class="form-control" @bind="displayOriginalY" step="0.01" />
+                            @if (GetOriginalUnitLabel() == "in" && fractionDisplay != FractionMode.Decimal)
+                            {
+                                <small class="text-muted d-block mt-1">@ConvertToFraction(displayOriginalY, fractionDisplay)</small>
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Depth <span class="text-muted">(@(GetOriginalUnitLabel()))</span></label>
+                            <input type="number" class="form-control" @bind="displayOriginalZ" step="0.01" />
+                            @if (GetOriginalUnitLabel() == "in" && fractionDisplay != FractionMode.Decimal)
+                            {
+                                <small class="text-muted d-block mt-1">@ConvertToFraction(displayOriginalZ, fractionDisplay)</small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Block Dimensions -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>New Block Dimensions</h5>
+                    <small class="text-muted">Enter ONE dimension to scale proportionally</small>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="scaleAxis" id="scaleX"
+                                       checked="@(selectedAxis == "X")" @onchange="@(() => SetSelectedAxis("X"))" />
+                                <label class="form-check-label" for="scaleX">
+                                    Scale by Width
+                                </label>
+                            </div>
+                            <input type="number" class="form-control mt-2" @bind="displayNewX" step="0.01"
+                                   disabled="@(selectedAxis != "X")" />
+                            @if (GetNewUnitLabel() == "in" && fractionDisplay != FractionMode.Decimal && scaleFactorsComputed)
+                            {
+                                <small class="text-muted d-block mt-1">@ConvertToFraction(displayNewX, fractionDisplay)</small>
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="scaleAxis" id="scaleY"
+                                       checked="@(selectedAxis == "Y")" @onchange="@(() => SetSelectedAxis("Y"))" />
+                                <label class="form-check-label" for="scaleY">
+                                    Scale by Height
+                                </label>
+                            </div>
+                            <input type="number" class="form-control mt-2" @bind="displayNewY" step="0.01"
+                                   disabled="@(selectedAxis != "Y")" />
+                            @if (GetNewUnitLabel() == "in" && fractionDisplay != FractionMode.Decimal && scaleFactorsComputed)
+                            {
+                                <small class="text-muted d-block mt-1">@ConvertToFraction(displayNewY, fractionDisplay)</small>
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="scaleAxis" id="scaleZ"
+                                       checked="@(selectedAxis == "Z")" @onchange="@(() => SetSelectedAxis("Z"))" />
+                                <label class="form-check-label" for="scaleZ">
+                                    Scale by Depth
+                                </label>
+                            </div>
+                            <input type="number" class="form-control mt-2" @bind="displayNewZ" step="0.01"
+                                   disabled="@(selectedAxis != "Z")" />
+                            @if (GetNewUnitLabel() == "in" && fractionDisplay != FractionMode.Decimal && scaleFactorsComputed)
+                            {
+                                <small class="text-muted d-block mt-1">@ConvertToFraction(displayNewZ, fractionDisplay)</small>
+                            }
+                        </div>
+                    </div>
+                    @if (scaleFactorsComputed)
+                    {
+                        <div class="mt-3 pt-3 border-top">
+                            <strong class="text-muted">Calculated Dimensions:</strong>
+                            @if (fractionDisplay == FractionMode.Decimal)
+                            {
+                                <small class="text-muted d-block">Width = @displayNewX.ToString("F3"), Height = @displayNewY.ToString("F3"), Depth = @displayNewZ.ToString("F3") @(GetNewUnitLabel())</small>
+                            }
+                            else
+                            {
+                                <small class="text-muted d-block">
+                                    Width = @ConvertToFraction(displayNewX, fractionDisplay), 
+                                    Height = @ConvertToFraction(displayNewY, fractionDisplay), 
+                                    Depth = @ConvertToFraction(displayNewZ, fractionDisplay) @(GetNewUnitLabel())
+                                </small>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compute Scale Button -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <button class="btn btn-primary btn-lg w-100" @onclick="ComputeScale">
+                Compute Scale
+            </button>
+        </div>
+    </div>
+
+    <!-- Scale Factors Display -->
+    @if (scaleFactorsComputed)
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h5>Scale Factor</h5>
+                    <p class="mb-2">
+                        <strong>Uniform Scale:</strong> @uniformScale.ToString("F4")
+                        <small class="text-muted">(All dimensions scaled proportionally)</small>
+                    </p>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>X:</strong> @scaleX.ToString("F4")
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Y:</strong> @scaleY.ToString("F4")
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Z:</strong> @scaleZ.ToString("F4")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cut Lines Table -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Cut Lines</h5>
+                        <button class="btn btn-sm btn-success" @onclick="AddCutLine">Add Cut Line</button>
+                    </div>
+                    <div class="card-body">
+                        @if (cutLines.Count == 0)
+                        {
+                            <p class="text-muted">No cut lines added yet. Click "Add Cut Line" to begin.</p>
+                        }
+                        else
+                        {
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Cut Name</th>
+                                        <th>Original (@(GetOriginalUnitLabel()))</th>
+                                        <th>Scaled (@(GetNewUnitLabel()))</th>
+                                        <th>Scaled (mm)</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var cutLine in cutLines)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" @bind="cutLine.Name" />
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm" 
+                                                       value="@GetDisplayOriginalValue(cutLine).ToString("F2")"
+                                                       @oninput="@((e) => UpdateCutLineFromDisplay(cutLine, e.Value?.ToString()))" step="0.01" />
+                                            </td>
+                                            <td>
+                                                @if (fractionDisplay == FractionMode.Decimal)
+                                                {
+                                                    @GetDisplayScaledValue(cutLine).ToString("F4")
+                                                }
+                                                else
+                                                {
+                                                    @ConvertToFraction(GetDisplayScaledValue(cutLine), fractionDisplay)
+                                                }
+                                            </td>
+                                            <td>@cutLine.ScaledMM.ToString("F2")</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-danger" @onclick="() => RemoveCutLine(cutLine)">Remove</button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    // Internal storage - always in inches
+    private double originalX = 2.0;
+    private double originalY = 2.0;
+    private double originalZ = 2.0;
+
+    private double newX = 1.0;
+    private double newY = 1.0;
+    private double newZ = 1.0;
+
+    // Display values - shown in the current display unit
+    private double displayOriginalX = 2.0;
+    private double displayOriginalY = 2.0;
+    private double displayOriginalZ = 2.0;
+
+    private double displayNewX = 1.0;
+    private double displayNewY = 1.0;
+    private double displayNewZ = 1.0;
+
+    private string selectedAxis = "X";
+
+    private double scaleX;
+    private double scaleY;
+    private double scaleZ;
+    private double uniformScale; // Single scale factor for proportional scaling
+
+    private bool scaleFactorsComputed = false;
+
+    private FractionMode fractionDisplay = FractionMode.Decimal;
+    
+    // Unit mode tracking
+    private MeasurementUnit displayUnit = MeasurementUnit.Inches; // For GlobalUnits mode
+    private MeasurementUnit originalBlockUnit = MeasurementUnit.Inches; // For IndividualUnits mode
+    private MeasurementUnit newBlockUnit = MeasurementUnit.Inches; // For IndividualUnits mode
+
+    private List<CutLine> cutLines = new();
+
+    private const double INCHES_TO_MM = 25.4;
+
+    protected override void OnInitialized()
+    {
+        // Initialize units from AppState
+        displayUnit = AppState.DefaultMeasurementUnit;
+        originalBlockUnit = AppState.DefaultMeasurementUnit;
+        newBlockUnit = AppState.DefaultMeasurementUnit;
+        SyncDisplayValues();
+    }
+
+    /// <summary>
+    /// Gets the unit label for the original block based on current mode
+    /// </summary>
+    private string GetOriginalUnitLabel()
+    {
+        var unit = AppState.UnitModePreference == UnitMode.GlobalUnits 
+            ? displayUnit 
+            : originalBlockUnit;
+        return unit == MeasurementUnit.Inches ? "in" : "mm";
+    }
+
+    /// <summary>
+    /// Gets the unit label for the new block based on current mode
+    /// </summary>
+    private string GetNewUnitLabel()
+    {
+        var unit = AppState.UnitModePreference == UnitMode.GlobalUnits 
+            ? displayUnit 
+            : newBlockUnit;
+        return unit == MeasurementUnit.Inches ? "in" : "mm";
+    }
+
+    /// <summary>
+    /// Changes the display unit in GlobalUnits mode
+    /// </summary>
+    private void ChangeDisplayUnit(MeasurementUnit newUnit)
+    {
+        displayUnit = newUnit;
+        SyncDisplayValues();
+    }
+
+    /// <summary>
+    /// Changes the original block unit in IndividualUnits mode
+    /// </summary>
+    private void ChangeOriginalBlockUnit(MeasurementUnit newUnit)
+    {
+        originalBlockUnit = newUnit;
+        SyncDisplayValues();
+    }
+
+    /// <summary>
+    /// Changes the new block unit in IndividualUnits mode
+    /// </summary>
+    private void ChangeNewBlockUnit(MeasurementUnit newUnit)
+    {
+        newBlockUnit = newUnit;
+        SyncDisplayValues();
+    }
+
+    /// <summary>
+    /// Syncs display values from internal (inches) values based on current units
+    /// </summary>
+    private void SyncDisplayValues()
+    {
+        if (AppState.UnitModePreference == UnitMode.GlobalUnits)
+        {
+            if (displayUnit == MeasurementUnit.Millimeters)
+            {
+                displayOriginalX = originalX * INCHES_TO_MM;
+                displayOriginalY = originalY * INCHES_TO_MM;
+                displayOriginalZ = originalZ * INCHES_TO_MM;
+
+                displayNewX = newX * INCHES_TO_MM;
+                displayNewY = newY * INCHES_TO_MM;
+                displayNewZ = newZ * INCHES_TO_MM;
+            }
+            else
+            {
+                displayOriginalX = originalX;
+                displayOriginalY = originalY;
+                displayOriginalZ = originalZ;
+
+                displayNewX = newX;
+                displayNewY = newY;
+                displayNewZ = newZ;
+            }
+        }
+        else // IndividualUnits mode
+        {
+            // Original block uses originalBlockUnit
+            if (originalBlockUnit == MeasurementUnit.Millimeters)
+            {
+                displayOriginalX = originalX * INCHES_TO_MM;
+                displayOriginalY = originalY * INCHES_TO_MM;
+                displayOriginalZ = originalZ * INCHES_TO_MM;
+            }
+            else
+            {
+                displayOriginalX = originalX;
+                displayOriginalY = originalY;
+                displayOriginalZ = originalZ;
+            }
+
+            // New block uses newBlockUnit
+            if (newBlockUnit == MeasurementUnit.Millimeters)
+            {
+                displayNewX = newX * INCHES_TO_MM;
+                displayNewY = newY * INCHES_TO_MM;
+                displayNewZ = newZ * INCHES_TO_MM;
+            }
+            else
+            {
+                displayNewX = newX;
+                displayNewY = newY;
+                displayNewZ = newZ;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Updates internal values when display values change
+    /// </summary>
+    private void SyncInternalValues()
+    {
+        if (AppState.UnitModePreference == UnitMode.GlobalUnits)
+        {
+            if (displayUnit == MeasurementUnit.Millimeters)
+            {
+                originalX = displayOriginalX / INCHES_TO_MM;
+                originalY = displayOriginalY / INCHES_TO_MM;
+                originalZ = displayOriginalZ / INCHES_TO_MM;
+
+                newX = displayNewX / INCHES_TO_MM;
+                newY = displayNewY / INCHES_TO_MM;
+                newZ = displayNewZ / INCHES_TO_MM;
+            }
+            else
+            {
+                originalX = displayOriginalX;
+                originalY = displayOriginalY;
+                originalZ = displayOriginalZ;
+
+                newX = displayNewX;
+                newY = displayNewY;
+                newZ = displayNewZ;
+            }
+        }
+        else // IndividualUnits mode
+        {
+            // Original block
+            if (originalBlockUnit == MeasurementUnit.Millimeters)
+            {
+                originalX = displayOriginalX / INCHES_TO_MM;
+                originalY = displayOriginalY / INCHES_TO_MM;
+                originalZ = displayOriginalZ / INCHES_TO_MM;
+            }
+            else
+            {
+                originalX = displayOriginalX;
+                originalY = displayOriginalY;
+                originalZ = displayOriginalZ;
+            }
+
+            // New block
+            if (newBlockUnit == MeasurementUnit.Millimeters)
+            {
+                newX = displayNewX / INCHES_TO_MM;
+                newY = displayNewY / INCHES_TO_MM;
+                newZ = displayNewZ / INCHES_TO_MM;
+            }
+            else
+            {
+                newX = displayNewX;
+                newY = displayNewY;
+                newZ = displayNewZ;
+            }
+        }
+    }
+
+    private void SetSelectedAxis(string axis)
+    {
+        selectedAxis = axis;
+    }
+
+    private void ComputeScale()
+    {
+        // Sync internal values from display values before computing
+        SyncInternalValues();
+
+        // Calculate uniform scale factor based on selected axis
+        if (selectedAxis == "X" && originalX > 0)
+        {
+            uniformScale = newX / originalX;
+            newY = originalY * uniformScale;
+            newZ = originalZ * uniformScale;
+        }
+        else if (selectedAxis == "Y" && originalY > 0)
+        {
+            uniformScale = newY / originalY;
+            newX = originalX * uniformScale;
+            newZ = originalZ * uniformScale;
+        }
+        else if (selectedAxis == "Z" && originalZ > 0)
+        {
+            uniformScale = newZ / originalZ;
+            newX = originalX * uniformScale;
+            newY = originalY * uniformScale;
+        }
+
+        // Apply uniform scale to all axes
+        scaleX = scaleY = scaleZ = uniformScale;
+
+        scaleFactorsComputed = true;
+
+        // Sync display values after computing
+        SyncDisplayValues();
+
+        // Update all existing cut lines
+        foreach (var cutLine in cutLines)
+        {
+            UpdateCutLineScaling(cutLine);
+        }
+    }
+
+    private void AddCutLine()
+    {
+        var newCutLine = new CutLine
+        {
+            Name = $"Cut {cutLines.Count + 1}",
+            OriginalInches = 1.0
+        };
+        UpdateCutLineScaling(newCutLine);
+        cutLines.Add(newCutLine);
+    }
+
+    private void RemoveCutLine(CutLine cutLine)
+    {
+        cutLines.Remove(cutLine);
+    }
+
+    private void UpdateCutLineFromDisplay(CutLine cutLine, string? value)
+    {
+        if (double.TryParse(value, out double displayValue))
+        {
+            // Cut lines are always entered in original block units
+            var originalUnit = AppState.UnitModePreference == UnitMode.GlobalUnits 
+                ? displayUnit 
+                : originalBlockUnit;
+            
+            cutLine.OriginalInches = originalUnit == MeasurementUnit.Millimeters
+                ? displayValue / INCHES_TO_MM
+                : displayValue;
+            UpdateCutLineScaling(cutLine);
+        }
+    }
+
+    private void UpdateCutLineScaling(CutLine cutLine)
+    {
+        // Using uniform scale factor to maintain proportions
+        cutLine.ScaledInches = cutLine.OriginalInches * uniformScale;
+        cutLine.ScaledMM = cutLine.ScaledInches * INCHES_TO_MM;
+    }
+
+    /// <summary>
+    /// Gets the display value for the cut line's original measurement
+    /// </summary>
+    private double GetDisplayOriginalValue(CutLine cutLine)
+    {
+        var originalUnit = AppState.UnitModePreference == UnitMode.GlobalUnits 
+            ? displayUnit 
+            : originalBlockUnit;
+        
+        return originalUnit == MeasurementUnit.Millimeters
+            ? cutLine.OriginalInches * INCHES_TO_MM
+            : cutLine.OriginalInches;
+    }
+
+    /// <summary>
+    /// Gets the display value for the cut line's scaled measurement
+    /// </summary>
+    private double GetDisplayScaledValue(CutLine cutLine)
+    {
+        var newUnit = AppState.UnitModePreference == UnitMode.GlobalUnits 
+            ? displayUnit 
+            : newBlockUnit;
+        
+        return newUnit == MeasurementUnit.Millimeters
+            ? cutLine.ScaledInches * INCHES_TO_MM
+            : cutLine.ScaledInches;
+    }
+
+    private string ConvertToFraction(double value, FractionMode mode)
+    {
+        int denominator = mode == FractionMode.Sixteenth ? 16 : 32;
+
+        int wholeInches = (int)Math.Floor(value);
+        double fractionalPart = value - wholeInches;
+
+        int numerator = (int)Math.Round(fractionalPart * denominator);
+
+        // Simplify fraction if possible
+        if (numerator == 0)
+        {
+            return wholeInches > 0 ? $"{wholeInches}\"" : "0\"";
+        }
+        else if (numerator == denominator)
+        {
+            return $"{wholeInches + 1}\"";
+        }
+        else
+        {
+            int gcd = GCD(numerator, denominator);
+            numerator /= gcd;
+            denominator /= gcd;
+
+            if (wholeInches > 0)
+            {
+                return $"{wholeInches} {numerator}/{denominator}\"";
+            }
+            else
+            {
+                return $"{numerator}/{denominator}\"";
+            }
+        }
+    }
+
+    private int GCD(int a, int b)
+    {
+        while (b != 0)
+        {
+            int temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return a;
+    }
+
+    public class CutLine
+    {
+        public string Name { get; set; } = "";
+        public double OriginalInches { get; set; }
+        public double ScaledInches { get; set; }
+        public double ScaledMM { get; set; }
+    }
+
+    public enum FractionMode
+    {
+        Decimal,
+        Sixteenth,
+        ThirtySecond
+    }
+}

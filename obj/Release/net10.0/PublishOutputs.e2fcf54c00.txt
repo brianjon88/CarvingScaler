@@ -1,0 +1,4 @@
+C:\users\brian\onedrive\claude\CarvingScaler\bin\Release\net10.0\publish\wwwroot\index.html
+C:\users\brian\onedrive\claude\CarvingScaler\bin\Release\net10.0\publish\CarvingScaler.runtimeconfig.json
+C:\users\brian\onedrive\claude\CarvingScaler\bin\Release\net10.0\publish\dotnet.js
+C:\users\brian\onedrive\claude\CarvingScaler\bin\Release\net10.0\publish\web.config

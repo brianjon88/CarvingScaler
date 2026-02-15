@@ -1,0 +1,135 @@
+@page "/measurement-tools"
+
+<PageTitle>Measurement Tools - Carving Pattern Toolkit</PageTitle>
+
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-12">
+            <h3>Measurement Tools</h3>
+            <p class="text-muted">Convert between inches, millimeters, and fractions</p>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Inches to MM Converter -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Inches ↔ Millimeters</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Inches</label>
+                        <input type="number" class="form-control" @bind="inches" @oninput="ConvertInchesToMM" step="0.01" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Millimeters</label>
+                        <input type="number" class="form-control" @bind="millimeters" @oninput="ConvertMMToInches" step="0.1" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decimal to Fraction Converter -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Decimal ↔ Fractional Inches</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Decimal Inches</label>
+                        <input type="number" class="form-control" @bind="decimalInches" @bind:after="ConvertDecimalToFraction" step="0.01" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Precision</label>
+                        <select class="form-select" @bind="fractionPrecision" @bind:after="ConvertDecimalToFraction">
+                            <option value="16">1/16"</option>
+                            <option value="32">1/32"</option>
+                            <option value="64">1/64"</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Fractional:</strong> @fractionalResult
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private double inches = 1.0;
+    private double millimeters = 25.4;
+    private double decimalInches = 1.5;
+    private int fractionPrecision = 16;
+    private string fractionalResult = "1 1/2\"";
+
+    private void ConvertInchesToMM(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value?.ToString(), out double value))
+        {
+            inches = value;
+            millimeters = inches * 25.4;
+        }
+    }
+
+    private void ConvertMMToInches(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value?.ToString(), out double value))
+        {
+            millimeters = value;
+            inches = millimeters / 25.4;
+        }
+    }
+
+    private void ConvertDecimalToFraction()
+    {
+
+        int wholeInches = (int)Math.Floor(decimalInches);
+        double fractionalPart = decimalInches - wholeInches;
+
+        int numerator = (int)Math.Round(fractionalPart * fractionPrecision);
+
+        if (numerator == 0)
+        {
+            fractionalResult = wholeInches > 0 ? $"{wholeInches}\"" : "0\"";
+        }
+        else if (numerator == fractionPrecision)
+        {
+            fractionalResult = $"{wholeInches + 1}\"";
+        }
+        else
+        {
+            int gcd = GCD(numerator, fractionPrecision);
+            int simplifiedNum = numerator / gcd;
+            int simplifiedDen = fractionPrecision / gcd;
+
+            if (wholeInches > 0)
+            {
+                fractionalResult = $"{wholeInches} {simplifiedNum}/{simplifiedDen}\"";
+            }
+            else
+            {
+                fractionalResult = $"{simplifiedNum}/{simplifiedDen}\"";
+            }
+        }
+    }
+
+    private int GCD(int a, int b)
+    {
+        while (b != 0)
+        {
+            int temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return a;
+    }
+
+    protected override void OnInitialized()
+    {
+        ConvertDecimalToFraction();
+        millimeters = inches * 25.4;
+    }
+}

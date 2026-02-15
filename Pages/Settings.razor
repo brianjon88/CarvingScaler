@@ -1,0 +1,65 @@
+@page "/settings"
+@using CarvingScaler.Services
+@inject AppState AppState
+
+<PageTitle>Settings - Carving Pattern Toolkit</PageTitle>
+
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-12">
+            <h3>Settings</h3>
+            <p class="text-muted">Configure your preferences</p>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Preferences</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Unit Mode</label>
+                        <div class="btn-group d-block mb-2" role="group">
+                            <input type="radio" class="btn-check" name="unitMode" id="globalUnits"
+                                   checked="@(AppState.UnitModePreference == UnitMode.GlobalUnits)"
+                                   @onchange="@(() => AppState.UnitModePreference = UnitMode.GlobalUnits)" />
+                            <label class="btn btn-outline-primary" for="globalUnits">Use Global Units</label>
+
+                            <input type="radio" class="btn-check" name="unitMode" id="individualUnits"
+                                   checked="@(AppState.UnitModePreference == UnitMode.IndividualUnits)"
+                                   @onchange="@(() => AppState.UnitModePreference = UnitMode.IndividualUnits)" />
+                            <label class="btn btn-outline-primary" for="individualUnits">Use Individual Units</label>
+                        </div>
+                        <small class="text-muted d-block">
+                            <strong>Global Units:</strong> Single unit toggle affects all dimensions<br />
+                            <strong>Individual Units:</strong> Choose different units for original and new block dimensions
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Default Measurement Unit</label>
+                        <select class="form-select" @bind="AppState.DefaultMeasurementUnit">
+                            <option value="@MeasurementUnit.Inches">Inches</option>
+                            <option value="@MeasurementUnit.Millimeters">Millimeters</option>
+                        </select>
+                        <small class="text-muted">Choose your preferred unit for measurements</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Default Fraction Precision</label>
+                        <select class="form-select">
+                            <option value="16" selected>1/16"</option>
+                            <option value="32">1/32"</option>
+                            <option value="64">1/64"</option>
+                        </select>
+                        <small class="text-muted">Default precision for fractional displays</small>
+                    </div>
+                    <hr />
+                    <h6>About</h6>
+                    <p>Carving Pattern Toolkit v1.0</p>
+                    <p class="text-muted mb-0">A tool for woodcarvers to scale patterns and convert measurements.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
